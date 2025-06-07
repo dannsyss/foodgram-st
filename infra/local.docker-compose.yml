@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+
+  migrate:
+    container_name: foodgram-migrate
+    build:
+      context: ../backend
+    command: python manage.py migrate --noinput
+    env_file:
+      - .env
+    volumes:
+      - staticfiles:/app/staticfiles/
+      - ./static:/host_static  # Для тестирования
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+  collectstatic:
+    container_name: foodgram-collectstatic
+    build:
+      context: ../backend
+    command: python manage.py collectstatic --noinput --clear
+    env_file:
+      - .env
+    volumes:
+      - staticfiles:/app/staticfiles/
+      - ./static:/host_static  # Синхронизируем с хостом
+    depends_on:
+      - migrate
+    restart: on-failure
+
+  db:
+    container_name: foodgram-db
+    image: "postgres:16-alpine"
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -h $DB_HOST -U $POSTGRES_USER -d $POSTGRES_DB" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: foodgram-back
+    build: ../backend
+    command: gunicorn --bind 0.0.0.0:8000 foodgram.wsgi
+    volumes:
+      - ../backend:/app           # Синхронизируем код бэкенда
+      - staticfiles:/app/staticfiles/
+      - mediafiles:/app/media/
+      - ./static:/host_static     # Локальная папка с собранной статикой
+    env_file: .env
+    depends_on:
+      - db
+      - collectstatic
+    restart: always
+
+  frontend:
+    container_name: foodgram-front
+    build: ../frontend
+    command: sh -c "npm run build && cp -r /app/build/. /frontend_static/"
+    volumes:
+      - staticfiles:/frontend_static
+    restart: on-failure
+
+  nginx:
+    container_name: foodgram-proxy
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - staticfiles:/staticfiles/
+      - mediafiles:/media/
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  staticfiles:
+  mediafiles:
+  pg_data:

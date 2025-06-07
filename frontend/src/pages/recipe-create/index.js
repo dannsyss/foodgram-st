@@ -20,6 +20,7 @@ import { Icons } from "../../components";
 import cn from "classnames";
 
 const RecipeCreate = ({ onEdit }) => {
+  const { value, handleChange, setValue } = useTags();
   const [recipeName, setRecipeName] = useState("");
   const history = useHistory();
   const [ingredientValue, setIngredientValue] = useState({
@@ -79,6 +80,12 @@ const RecipeCreate = ({ onEdit }) => {
     [ingredientValue.name]
   );
 
+  useEffect((_) => {
+    api.getTags().then((tags) => {
+      setValue(tags.map((tag) => ({ ...tag, value: true })));
+    });
+  }, []);
+
   const handleIngredientAutofill = ({ id, name, measurement_unit }) => {
     setIngredientValue({
       ...ingredientValue,
@@ -101,6 +108,10 @@ const RecipeCreate = ({ onEdit }) => {
       return true;
     }
 
+    if (value.filter((item) => item.value).length === 0) {
+      setSubmitError({ submitError: "Выберите хотя бы один тег" });
+      return true;
+    }
     return false;
   };
 
@@ -127,6 +138,7 @@ const RecipeCreate = ({ onEdit }) => {
                 id: item.id,
                 amount: item.amount,
               })),
+              tags: value.filter((item) => item.value).map((item) => item.id),
               cooking_time: recipeTime,
               image: recipeFile,
             };
@@ -175,6 +187,16 @@ const RecipeCreate = ({ onEdit }) => {
               setRecipeName(value);
             }}
             className={styles.mb36}
+          />
+          <CheckboxGroup
+            label="Теги"
+            values={value}
+            emptyText="Нет загруженных тегов"
+            className={styles.checkboxGroup}
+            labelClassName={styles.checkboxGroupLabel}
+            tagsClassName={styles.checkboxGroupTags}
+            checkboxClassName={styles.checkboxGroupItem}
+            handleChange={handleChange}
           />
           <div className={styles.ingredients}>
             <div className={styles.ingredientsInputs}>

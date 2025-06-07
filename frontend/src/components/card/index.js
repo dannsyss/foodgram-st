@@ -1,6 +1,6 @@
 import styles from "./style.module.css";
 import { Tooltip } from "react-tooltip";
-import { LinkComponent, Icons, Button, Popup } from "../index";
+import { LinkComponent, Icons, Button, TagsContainer, Popup } from "../index";
 import { AuthContext } from "../../contexts";
 import { useContext, useState } from "react";
 import cn from "classnames";
@@ -12,6 +12,7 @@ const Card = ({
   image,
   is_favorited,
   is_in_shopping_cart,
+  tags,
   cooking_time,
   author = {},
   handleLike,
@@ -38,6 +39,7 @@ const Card = ({
           }}
         />
       )}
+      <TagsContainer tags={tags} className={styles.card__tag} />
 
       <LinkComponent
         href={`/recipes/${id}`}

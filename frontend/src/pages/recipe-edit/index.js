@@ -79,10 +79,16 @@ const RecipeEdit = ({ onItemDelete }) => {
     [ingredientValue.name]
   );
 
+  useEffect((_) => {
+    api.getTags().then((tags) => {
+      setValue(tags.map((tag) => ({ ...tag, value: true })));
+    });
+  }, []);
+
   const { id } = useParams();
   useEffect(
     (_) => {
-      if (!loading) {
+      if (value.length === 0 || !loading) {
         return;
       }
       api
@@ -90,13 +96,18 @@ const RecipeEdit = ({ onItemDelete }) => {
           recipe_id: id,
         })
         .then((res) => {
-          const { image, cooking_time, name, ingredients, text } = res;
+          const { image, tags, cooking_time, name, ingredients, text } = res;
           setRecipeText(text);
           setRecipeName(name);
           setRecipeTime(cooking_time);
           setRecipeFile(image);
           setRecipeIngredients(ingredients);
 
+          const tagsValueUpdated = value.map((item) => {
+            item.value = Boolean(tags.find((tag) => tag.id === item.id));
+            return item;
+          });
+          setValue(tagsValueUpdated);
           setLoading(false);
         })
         .catch((err) => {
@@ -128,6 +139,10 @@ const RecipeEdit = ({ onItemDelete }) => {
       return true;
     }
 
+    if (value.filter((item) => item.value).length === 0) {
+      setSubmitError({ submitError: "Выберите хотя бы один тег" });
+      return true;
+    }
     return false;
   };
 
@@ -154,6 +169,7 @@ const RecipeEdit = ({ onItemDelete }) => {
                 id: item.id,
                 amount: item.amount,
               })),
+              tags: value.filter((item) => item.value).map((item) => item.id),
               cooking_time: recipeTime,
               image: recipeFile,
               recipe_id: id,
@@ -204,6 +220,16 @@ const RecipeEdit = ({ onItemDelete }) => {
             }}
             value={recipeName}
             className={styles.mb36}
+          />
+          <CheckboxGroup
+            label="Теги"
+            emptyText="Нет загруженных тегов"
+            values={value}
+            className={styles.checkboxGroup}
+            labelClassName={styles.checkboxGroupLabel}
+            tagsClassName={styles.checkboxGroupTags}
+            checkboxClassName={styles.checkboxGroupItem}
+            handleChange={handleChange}
           />
           <div className={styles.ingredients}>
             <div className={styles.ingredientsInputs}>

@@ -1,0 +1,10 @@
+.env/
+.venv/
+env/
+venv/
+tests/
+media/
+db.sqlite3
+requirements.dev.txt
+foodgram/dev_settings.py
+foodgram/dev_urls.py

@@ -27,6 +27,9 @@ const UserPage = ({ updateOrders }) => {
     setRecipesCount,
     recipesPage,
     setRecipesPage,
+    tagsValue,
+    setTagsValue,
+    handleTagsChange,
     handleLike,
     handleAddToCart,
   } = useRecipes();
@@ -37,8 +40,8 @@ const UserPage = ({ updateOrders }) => {
   const userContext = useContext(UserContext);
   const authContext = useContext(AuthContext);
 
-  const getRecipes = ({ page = 1 }) => {
-    api.getRecipes({ page, author: id }).then((res) => {
+  const getRecipes = ({ page = 1, tags }) => {
+    api.getRecipes({ page, author: id, tags }).then((res) => {
       const { results, count } = res;
       setRecipes(results);
       setRecipesCount(count);
@@ -62,13 +65,19 @@ const UserPage = ({ updateOrders }) => {
       if (!user) {
         return;
       }
-      getRecipes({ page: recipesPage, author: user.id });
+      getRecipes({ page: recipesPage, tags: tagsValue, author: user.id });
     },
-    [recipesPage, user]
+    [recipesPage, tagsValue, user]
   );
 
   useEffect((_) => {
     getUser();
+  }, []);
+
+  useEffect((_) => {
+    api.getTags().then((tags) => {
+      setTagsValue(tags.map((tag) => ({ ...tag, value: true })));
+    });
   }, []);
 
   return (
@@ -138,6 +147,14 @@ const UserPage = ({ updateOrders }) => {
               </Button>
             )}
           </div>
+
+          <CheckboxGroup
+            values={tagsValue}
+            handleChange={(value) => {
+              setRecipesPage(1);
+              handleTagsChange(value);
+            }}
+          />
         </div>
 
         {recipes.length > 0 && (

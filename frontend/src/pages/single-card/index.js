@@ -3,6 +3,7 @@ import {
   Container,
   Main,
   Button,
+  TagsContainer,
   Icons,
   LinkComponent,
 } from "../../components";
@@ -81,6 +82,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
   const {
     author = {},
     image,
+    tags,
     cooking_time,
     name,
     ingredients,
@@ -146,6 +148,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
             </div>
 
             <div className={styles["single-card__extra-info"]}>
+              <TagsContainer tags={tags} />
               <p className={styles["single-card__text"]}>{cooking_time} мин.</p>
               <p className={styles["single-card__text_with_link"]}>
                 <div className={styles["single-card__text"]}>
